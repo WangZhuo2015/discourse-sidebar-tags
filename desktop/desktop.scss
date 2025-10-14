@@ -1,38 +1,31 @@
-/* 标签过滤栏 - 出现在话题列表表头上方 */
+/* 标签过滤栏 - 紧贴表头，无任何 padding/margin/border */
 .discourse-sidebar-tags {
-  margin: 1em 0;
-  padding: 0.8em 0;
-  border-bottom: 1px solid var(--primary-low);
+  margin: 0;
+  padding: 0;
+  border: none;
   width: 100%;
 }
 
 .sidebar-tags-list {
   display: flex;
-  flex-wrap: wrap;       /* ← 关键：允许换行 */
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;              /* 现代浏览器支持 gap，自动处理间距 */
+  gap: 8px; /* 仅保留标签之间的间距，可按需调整或设为 0 */
+  margin: 0;
+  padding: 0;
 }
 
-/* 标题样式 */
 .tags-list-title {
-  margin: 0 12px 0 0;
+  margin: 0;
+  padding: 0;
   font-weight: 600;
   font-size: 0.95em;
   color: var(--primary-medium);
   white-space: nowrap;
+  line-height: 1;
 }
 
-/* 标签样式微调（可选） */
-.discourse-sidebar-tags .discourse-tag.box {
-  flex-shrink: 0; /* 防止标签被压缩 */
-}
-
-/* 移动端优化（虽然组件在 mobileView 不显示，但保险起见） */
-@media screen and (max-width: 767px) {
-  .discourse-sidebar-tags {
-    padding: 0.6em 0;
-  }
-  .tags-list-title {
-    font-size: 0.9em;
-  }
+/* 确保标签本身也没有额外 margin */
+.discourse-sidebar-tags .discourse-tag {
+  margin: 0;
 }
