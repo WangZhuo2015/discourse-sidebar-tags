@@ -1,6 +1,5 @@
 import Component from "@ember/component";
 import { tagName } from "@ember-decorators/component";
-import discourseTag from "discourse/helpers/discourse-tag";
 import { ajax } from "discourse/lib/ajax";
 import { getOwnerWithFallback } from "discourse/lib/get-owner";
 import { withPluginApi } from "discourse/lib/plugin-api";
@@ -19,7 +18,6 @@ function tagCount(a, b) {
   return 0;
 }
 
-// 唯一标识符
 const TAG_BAR_ID = "discourse-sidebar-tags-instance";
 
 @tagName("")
@@ -39,7 +37,6 @@ export default class SidebarTags extends Component {
           const tagRegex = /^\/tag[s]?\/(.*)/;
           if (!settings.enable_tag_cloud) return;
 
-          // ✅ 关键：每次 onPageChange 都先清理旧的标签栏（防止重复）
           this._removeTagBar();
 
           this.setProperties({
@@ -125,6 +122,17 @@ export default class SidebarTags extends Component {
     }
   }
 
+  getTagUrl(tagName) {
+    const path = window.location.pathname;
+    const match = path.match(/^\/(?:tags\/c|c)\/([^\/]+)\/(\d+)/);
+    if (match) {
+      const slug = match[1];
+      const categoryId = match[2];
+      return `/tags/c/${slug}/${categoryId}/${tagName}`;
+    }
+    return `/tag/${tagName}`;
+  }
+
   moveToTopOfTable() {
     if (this.isDestroyed || this.isDestroying || this.hideSidebar) {
       this._removeTagBar();
@@ -139,21 +147,19 @@ export default class SidebarTags extends Component {
 
     let tagBar = document.getElementById(TAG_BAR_ID);
     if (!tagBar) {
-      // 如果 Glimmer 渲染的元素没有 ID，我们手动找并加 ID
       tagBar = document.querySelector(".discourse-sidebar-tags");
       if (tagBar) {
         tagBar.id = TAG_BAR_ID;
       } else {
-        return; // 未渲染
+        return;
       }
     }
 
-    // 确保只插入一次：检查是否已在正确位置
+    // 避免重复插入
     if (tagBar.parentNode === table.parentNode && tagBar.nextSibling === table) {
       return;
     }
 
-    // 插入到 table 前面
     table.parentNode.insertBefore(tagBar, table);
   }
 
@@ -171,7 +177,6 @@ export default class SidebarTags extends Component {
     {{#unless this.site.mobileView}}
       {{#if this.isDiscoveryList}}
         {{#unless this.hideSidebar}}
-          {{!-- 添加唯一 ID，便于识别 --}}
           <div id={{TAG_BAR_ID}} class="discourse-sidebar-tags">
             <div class="sidebar-tags-list">
               <h3 class="tags-list-title">
@@ -179,7 +184,13 @@ export default class SidebarTags extends Component {
               </h3>
               {{#if this.tagList.length}}
                 {{#each this.tagList as |t|}}
-                  {{discourseTag t.id style="box"}}
+                  <a
+                    href={{this.getTagUrl t.name}}
+                    data-tag-name={{t.name}}
+                    class="discourse-tag box"
+                  >
+                    {{t.name}}
+                  </a>
                 {{/each}}
               {{else}}
                 <p class="no-tags">{{i18n (themePrefix "tag_sidebar.no_tags")}}</p>

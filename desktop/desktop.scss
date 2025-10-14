@@ -1,8 +1,8 @@
-/* 标签栏 - 现在位于 table 上方 */
 .discourse-sidebar-tags {
   margin: 0 0 1em 0;
   padding: 0.8em 0;
   border-bottom: 1px solid var(--primary-low);
+  width: 100%;
 }
 
 .sidebar-tags-list {
@@ -22,4 +22,5 @@
 
 .discourse-sidebar-tags .discourse-tag.box {
   flex-shrink: 0;
+  text-decoration: none;
 }
