@@ -5,6 +5,7 @@ import { ajax } from "discourse/lib/ajax";
 import { getOwnerWithFallback } from "discourse/lib/get-owner";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { i18n } from "discourse-i18n";
+import { scheduleOnce } from "@ember/runloop";
 
 function alphaId(a, b) {
   if (a.id < b.id) return -1;
@@ -18,11 +19,13 @@ function tagCount(a, b) {
   return 0;
 }
 
+// 唯一标识符
+const TAG_BAR_ID = "discourse-sidebar-tags-instance";
+
 @tagName("")
 export default class SidebarTags extends Component {
   init() {
     super.init(...arguments);
-    // 初始隐藏
     this.setProperties({
       hideSidebar: true,
       isDiscoveryList: false,
@@ -36,7 +39,9 @@ export default class SidebarTags extends Component {
           const tagRegex = /^\/tag[s]?\/(.*)/;
           if (!settings.enable_tag_cloud) return;
 
-          // 重置状态：每次页面变化都先隐藏并清空
+          // ✅ 关键：每次 onPageChange 都先清理旧的标签栏（防止重复）
+          this._removeTagBar();
+
           this.setProperties({
             isDiscoveryList: false,
             hideSidebar: true,
@@ -46,10 +51,8 @@ export default class SidebarTags extends Component {
 
           if (this.discoveryList || url.match(tagRegex)) {
             if (this.isDestroyed || this.isDestroying) return;
-
             this.set("isDiscoveryList", true);
 
-            // 发起请求
             ajax("/tags.json").then((result) => {
               if (this.isDestroyed || this.isDestroying) return;
 
@@ -62,30 +65,23 @@ export default class SidebarTags extends Component {
               };
 
               if (url.match(/^\/c\/(.*)/)) {
-                // 分类页面
                 const controller = getOwnerWithFallback(this).lookup("controller:navigation/category");
                 const category = controller?.get("category");
-
                 if (!category) {
                   this.set("hideSidebar", true);
                   return;
                 }
-
                 this.set("category", category);
 
                 const allowedTagNames = new Set(category.allowed_tags || []);
                 const allowedGroupNames = new Set(category.allowed_tag_groups || []);
-
                 const allowedTags = [];
 
                 if (allowedTagNames.size > 0) {
                   allTags.forEach(tag => {
-                    if (allowedTagNames.has(tag.name)) {
-                      allowedTags.push(tag);
-                    }
+                    if (allowedTagNames.has(tag.name)) allowedTags.push(tag);
                   });
                 }
-
                 if (allowedGroupNames.size > 0) {
                   tagGroups.forEach(group => {
                     if (allowedGroupNames.has(group.name)) {
@@ -94,7 +90,6 @@ export default class SidebarTags extends Component {
                   });
                 }
 
-                // 去重
                 const seen = new Set();
                 const uniqueAllowedTags = allowedTags.filter(tag => {
                   if (seen.has(tag.name)) return false;
@@ -108,12 +103,9 @@ export default class SidebarTags extends Component {
                     ? uniqueAllowedTags.sort(tagCount)
                     : uniqueAllowedTags.sort(alphaId);
                 } else {
-                  // 无允许标签 → 隐藏
                   this.set("hideSidebar", true);
-                  return;
                 }
               } else {
-                // 非分类页：显示所有 tag group 标签
                 this.set("hideSidebar", false);
                 let allGroupTags = getAllTagsFromGroups(tagGroups);
                 if (allGroupTags.length === 0) allGroupTags = allTags;
@@ -124,6 +116,7 @@ export default class SidebarTags extends Component {
 
               if (!(this.isDestroyed || this.isDestroying)) {
                 this.set("tagList", foundTags.slice(0, settings.number_of_tags));
+                scheduleOnce("afterRender", this, "moveToTopOfTable");
               }
             });
           }
@@ -132,11 +125,54 @@ export default class SidebarTags extends Component {
     }
   }
 
+  moveToTopOfTable() {
+    if (this.isDestroyed || this.isDestroying || this.hideSidebar) {
+      this._removeTagBar();
+      return;
+    }
+
+    const table = document.querySelector(".topic-list");
+    if (!table || !table.parentNode) {
+      this._removeTagBar();
+      return;
+    }
+
+    let tagBar = document.getElementById(TAG_BAR_ID);
+    if (!tagBar) {
+      // 如果 Glimmer 渲染的元素没有 ID，我们手动找并加 ID
+      tagBar = document.querySelector(".discourse-sidebar-tags");
+      if (tagBar) {
+        tagBar.id = TAG_BAR_ID;
+      } else {
+        return; // 未渲染
+      }
+    }
+
+    // 确保只插入一次：检查是否已在正确位置
+    if (tagBar.parentNode === table.parentNode && tagBar.nextSibling === table) {
+      return;
+    }
+
+    // 插入到 table 前面
+    table.parentNode.insertBefore(tagBar, table);
+  }
+
+  _removeTagBar() {
+    const existing = document.getElementById(TAG_BAR_ID) || document.querySelector(".discourse-sidebar-tags");
+    if (existing) existing.remove();
+  }
+
+  willDestroy() {
+    super.willDestroy(...arguments);
+    this._removeTagBar();
+  }
+
   <template>
     {{#unless this.site.mobileView}}
       {{#if this.isDiscoveryList}}
         {{#unless this.hideSidebar}}
-          <div class="discourse-sidebar-tags">
+          {{!-- 添加唯一 ID，便于识别 --}}
+          <div id={{TAG_BAR_ID}} class="discourse-sidebar-tags">
             <div class="sidebar-tags-list">
               <h3 class="tags-list-title">
                 {{i18n (themePrefix "tag_sidebar.title")}}
