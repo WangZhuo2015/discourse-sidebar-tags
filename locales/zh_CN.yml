@@ -1,0 +1,9 @@
+zh_CN:
+  theme_metadata:
+    settings:
+      group_tags_by_tag_group: "按标签组对标签进行分组显示"
+  tag_sidebar:
+    title: "标签"
+    no_tags: "没有可显示的标签。"
+    collapse: "收起"
+    uncategorized_tags: "其他标签"

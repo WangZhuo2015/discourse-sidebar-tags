@@ -5,11 +5,33 @@
   width: 100%;
 }
 
-.sidebar-tags-list {
+/* [新功能] Style for each group row */
+.sidebar-tag-group-row {
+  margin-bottom: 0.8em;
+}
+.sidebar-tag-group-row:last-child {
+  margin-bottom: 0;
+}
+
+.sidebar-tags-list-wrapper {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  width: 100%;
+}
+
+.sidebar-tags-list {
+  min-width: 0; 
+  display: flex;
+  flex-wrap: nowrap;
+  overflow: hidden;
   align-items: center;
   gap: 8px;
+}
+
+/* [新功能] When expanded, the list inside the group row wraps */
+.sidebar-tag-group-row.is-expanded .sidebar-tags-list {
+  flex-wrap: wrap;
+  overflow: visible;
 }
 
 .tags-list-title {
@@ -23,4 +45,21 @@
 .discourse-sidebar-tags .discourse-tag.box {
   flex-shrink: 0;
   text-decoration: none;
+}
+
+.tags-expand-btn {
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-left: 8px;
+  font-weight: bold;
+  border-radius: 4px;
+  background-color: var(--primary-very-low);
+  color: var(--primary-medium);
+  align-self: flex-start;
+}
+
+.tags-expand-btn:hover {
+  background-color: var(--primary-low);
+  color: var(--primary);
 }

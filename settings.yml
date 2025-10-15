@@ -10,3 +10,6 @@ sort_by_popularity:
  default: false
  type: bool
  description: When checked tags are sorted by popularity
+group_tags_by_tag_group:
+  default: false
+  client: true
