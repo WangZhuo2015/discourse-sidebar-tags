@@ -1,7 +1,7 @@
 import Component from "@ember/component";
 import { tagName } from "@ember-decorators/component";
 import { ajax } from "discourse/lib/ajax";
-import { getOwnerWithFallback } from "discourse/lib/get-owner";
+import { service } from "@ember/service";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import { i18n } from "discourse-i18n";
 import { scheduleOnce, debounce } from "@ember/runloop";
@@ -27,6 +27,7 @@ const UNCATEGORIZED_KEY = "_uncategorized";
 
 @tagName("")
 export default class SidebarTags extends Component {
+  @service discovery;
   get = get;
 
   init() {
@@ -87,8 +88,7 @@ export default class SidebarTags extends Component {
 
       // 判断是否在分类页面
       if (url.match(/^\/c\/(.*)/)) {
-        const controller = getOwnerWithFallback(this).lookup("controller:navigation/category");
-        const category = controller?.get("category");
+        const category = this.discovery.category;
         
         if (!category) {
           this.set("hideSidebar", true);
