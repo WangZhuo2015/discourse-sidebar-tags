@@ -6,3 +6,4 @@ en:
     title: "Tags"
     no_tags: "No tags to display."
     collapse: "Collapse" # <-- 新增此行
+    uncategorized_tags: "Uncategorized tags"
