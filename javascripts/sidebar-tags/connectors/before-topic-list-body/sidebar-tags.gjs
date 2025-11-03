@@ -46,11 +46,23 @@ export default class SidebarTags extends Component {
               }
               this.set("isDiscoveryList", true);
 
-              ajax("/tags.json").then((result) => {
+              Promise.all([
+                ajax("/tags.json"),
+                ajax("/tag_groups.json"),
+              ]).then(([tagsResult, tagGroupsResult]) => {
                 if (this.isDestroyed || this.isDestroying) return;
 
-                const tagGroups = result.extras?.tag_groups || [];
-                const allTags = result.tags || [];
+                const allTags = tagsResult.tags || [];
+                const tagGroupsData = tagGroupsResult.tag_groups || [];
+                const tagsMap = new Map(allTags.map((tag) => [tag.id, tag]));
+
+                const tagGroups = tagGroupsData.map((group) => {
+                  return {
+                    ...group,
+                    tags: (group.tag_names || []).map((name) => tagsMap.get(name)).filter(Boolean),
+                  };
+                });
+
                 let foundTags = [];
 
                 const getAllTagsFromGroups = (groups) => {
@@ -120,9 +132,12 @@ export default class SidebarTags extends Component {
                     ? allGroupTags.sort(tagCount)
                     : allGroupTags.sort(alphaId);
                 }
-
+                
+                console.log("Found tags to be rendered:", foundTags);
                 if (!(this.isDestroyed || this.isDestroying)) {
                   this.set("tagList", foundTags.slice(0, settings.number_of_tags));
+                  // 在这里添加日志，检查 hideSidebar 的状态
+                  console.log("Final hideSidebar state:", this.get("hideSidebar"));
                 }
               });
             } else {
