@@ -77,6 +77,13 @@ export default class SidebarTags extends Component {
                     document.querySelector(".topic-list")?.classList.remove("with-sidebar");
                     return;
                   }
+                  
+                  const hasSubcategories = category.subcategories && category.subcategories.length > 0;
+                  if (hasSubcategories) {
+                      this.set("hideSidebar", true);
+                      document.querySelector(".topic-list")?.classList.remove("with-sidebar");
+                      return;
+                  }
 
                   this.set("category", category);
 
