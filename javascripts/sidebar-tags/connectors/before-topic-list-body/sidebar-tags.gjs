@@ -125,6 +125,7 @@ export default class SidebarTags extends Component {
                   }
                 } else {
                   // 非分类页面：显示所有 tag group 中的标签
+                  this.set("category", null); // 确保在非分类页清除分类状态
                   this.set("hideSidebar", false);
                   let allGroupTags = getAllTagsFromGroups(tagGroups);
                   // 如果没有 tag groups，回退到全部标签
@@ -163,7 +164,11 @@ export default class SidebarTags extends Component {
               </h3>
               {{#if this.tagList.length}}
                 {{#each this.tagList as |t|}}
-                  {{discourseTag t.id style="box"}}
+                  {{#if this.category}}
+                    <a href="/tags{{this.category.url}}/{{t.id}}" class="discourse-tag box">{{t.id}}</a>
+                  {{else}}
+                    {{discourseTag t.id style="box"}}
+                  {{/if}}
                 {{/each}}
               {{else}}
                 <p class="no-tags">{{i18n (themePrefix "tag_sidebar.no_tags")}}</p>
