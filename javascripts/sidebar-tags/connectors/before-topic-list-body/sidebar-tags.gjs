@@ -46,22 +46,18 @@ export default class SidebarTags extends Component {
               }
               this.set("isDiscoveryList", true);
 
-              Promise.all([
-                ajax("/tags.json"),
-                ajax("/tag_groups.json"),
-              ]).then(([tagsResult, tagGroupsResult]) => {
+              ajax("/tags.json").then((tagsResult) => {
                 if (this.isDestroyed || this.isDestroying) return;
 
-                const allTags = tagsResult.tags || [];
-                const tagGroupsData = tagGroupsResult.tag_groups || [];
-                const tagsMap = new Map(allTags.map((tag) => [tag.id, tag]));
+                const tagGroups = tagsResult.extras?.tag_groups || [];
+                const allTagsInGroups = tagGroups.flatMap(g => g.tags || []);
+                const allRootTags = tagsResult.tags || [];
 
-                const tagGroups = tagGroupsData.map((group) => {
-                  return {
-                    ...group,
-                    tags: (group.tag_names || []).map((name) => tagsMap.get(name)).filter(Boolean),
-                  };
-                });
+                // Combine and deduplicate tags based on 'id'
+                const allTagsMap = new Map(
+                  [...allTagsInGroups, ...allRootTags].map(tag => [tag.id, tag])
+                );
+                const allTags = Array.from(allTagsMap.values());
 
                 let foundTags = [];
 
