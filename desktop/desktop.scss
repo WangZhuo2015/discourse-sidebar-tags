@@ -1,72 +1,100 @@
+// 当侧边栏激活时，为 <body> 添加的控制类
 .tag-sidebar-active {
   @media screen and (width >= 767px) {
-    // 选择器 #list-area .contents .topic-list 更加稳定
     #list-area .contents .topic-list {
       display: grid;
-      grid-column-gap: 2%;
+      grid-column-gap: 25px; // 使用固定值，避免百分比在不同宽度下变化过大
       align-items: start;
-      grid-template-rows: 50px auto;
-      grid-template-columns: 75% 23%;
+    }
 
-      @media screen and (width <= 900px) {
-        grid-template-columns: 82% 16%;
-      }
-      grid-template-areas:
-        "head sidebar"
-        "body sidebar";
-
-      // 兼容新旧Discourse版本的话题列表头部
-      thead,
-      .topic-list-header {
-        grid-area: head;
-        display: table;
-        align-self: end;
-        width: 100%;
-      }
-
-      // 兼容新旧Discourse版本的话题列表主体
-      tbody,
-      .topic-list-body {
-        grid-area: body;
-        display: table;
-        width: 100%;
-      }
-
-      // 侧边栏组件自身的样式
-      > .discourse-sidebar-tags {
-        box-sizing: border-box;
-        overflow: hidden;
-        display: block;
-        margin-top: 15px;
-        grid-area: sidebar;
-        order: 3;
-        padding: 1em;
-        border: 1px solid var(--primary-low);
-        background: var(--primary-very-low);
-        border-radius: 2px;
-
-        a {
-          display: inline-block;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          margin-bottom: 4px;
+    // --- 左侧边栏布局 ---
+    // 当 body 有 .sidebar-is-left 类时生效
+    &.sidebar-is-left #list-area .contents .topic-list {
+      grid-template-columns: 220px 1fr; // 固定宽度侧边栏，主内容自适应
+      grid-template-areas: "sidebar head" "sidebar body";
+      
+      // 修正左侧时 "有新主题" 提示条的位置
+      #list-area .show-more.has-topics {
+        display: flex;
+        justify-content: flex-end;
+        .alert {
+            width: 100%; // 让 alert 占据它所在的 grid cell 的全部宽度
         }
       }
     }
-  }
+    
+    // --- 右侧边栏布局 ---
+    // 当 body 有 .sidebar-is-right 类时生效
+    &.sidebar-is-right #list-area .contents .topic-list {
+      grid-template-columns: 1fr 220px;
+      grid-template-areas: "head sidebar" "body sidebar";
 
-  // "有新主题" 提示条的宽度修正
-  #list-area .show-more.has-topics .alert {
-    box-sizing: border-box;
-    width: 75%;
+      // 修正右侧时 "有新主题" 提示条的宽度
+      #list-area .show-more.has-topics .alert {
+        width: 100%;
+      }
+    }
 
-    @media screen and (width <= 900px) {
-      // 修正宽度以匹配 topic-list 的宽度 (82%)
-      width: 82%;
+    // 兼容新旧Discourse版本的话题列表头部
+    thead, .topic-list-header {
+      grid-area: head;
+      display: table;
+      align-self: end;
+      width: 100%;
+    }
+
+    // 兼容新旧Discourse版本的话题列表主体
+    tbody, .topic-list-body {
+      grid-area: body;
+      display: table;
+      width: 100%;
     }
   }
 }
 
-// 移除了旧的 .topic-list.with-sidebar 选择器和相关的 hack 代码，不再需要。
+// --- 侧边栏组件本身的样式 (独立出来) ---
+.discourse-sidebar-tags {
+  grid-area: sidebar; // 将自己放入名为 "sidebar" 的网格区域
+  
+  // --- 吸顶效果 ---
+  // 仅当 JS 根据后台设置添加了 is-sticky 类时，才应用 sticky 样式
+  &.is-sticky {
+    position: sticky;
+    // 吸附到顶部，留出和顶部导航栏的距离
+    top: calc(var(--header-offset, 60px) + 1em); 
+  }
 
+  // --- 内部美化样式 (从您之前的代码继承而来) ---
+  .sidebar-tags-list {
+    box-sizing: border-box;
+    border: 1px solid var(--primary-low);
+    background: var(--secondary); // 使用 secondary 颜色更常见
+    border-radius: 5px; // 圆角效果更好
+    padding: 15px;
+
+    .tags-list-title {
+        font-size: var(--font-up-1);
+        margin: 0 0 15px 0;
+        color: var(--primary-high);
+        border-bottom: 1px solid var(--primary-low);
+        padding-bottom: 10px;
+    }
+
+    // 标签容器
+    .tags-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px; // 标签间距
+    }
+
+    .discourse-tag.box {
+      margin: 0; // 使用 gap 替代 margin
+      padding: 5px 10px;
+    }
+
+    .no-tags {
+        color: var(--primary-medium);
+        font-style: italic;
+    }
+  }
+}

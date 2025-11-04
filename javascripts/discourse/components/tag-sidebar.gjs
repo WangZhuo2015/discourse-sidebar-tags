@@ -5,7 +5,7 @@ import { service } from "@ember/service";
 import { ajax } from "discourse/lib/ajax";
 import { i18n } from "discourse-i18n";
 import bodyClass from "discourse/helpers/body-class";
-import discourseTag from "discourse/helpers/discourse-tag";
+import { concat } from "@ember/helper";
 import didInsert from "@ember/render-modifiers/modifiers/did-insert";
 import didUpdate from "@ember/render-modifiers/modifiers/did-update";
 
@@ -153,27 +153,33 @@ export default class TagSidebar extends Component {
   }
 
   <template>
-    {{! v1. 创建一个始终存在的、不可见的 "控制器" 元素 }}
-    {{! v2. 将生命周期钩子(didInsert/didUpdate)绑定到这个元素上 }}
     <div
       class="tag-sidebar-manager-do-not-style"
       {{didInsert this.loadTags}}
       {{didUpdate this.loadTags this.currentCategory}}
     ></div>
 
-    {{! v3. 保持原有的显示逻辑不变 }}
     {{#if this.shouldDisplay}}
+      {{!-- 这两行是新功能的核心 --}}
+      {{!-- 1. 添加总开关 class --}}
       {{bodyClass "tag-sidebar-active"}}
+      {{!-- 2. 根据后台设置，动态添加位置 class (sidebar-is-left 或 sidebar-is-right) --}}
+      {{bodyClass (concat "sidebar-is-" settings.sidebar_position)}}
 
-      <div class="discourse-sidebar-tags">
+      {{!-- 3. 根据后台设置，给侧边栏本身添加 is-sticky class --}}
+      <div class="discourse-sidebar-tags {{if settings.sticky_sidebar 'is-sticky'}}">
         <div class="sidebar-tags-list">
           <h3 class="tags-list-title">
             {{i18n (themePrefix "tag_sidebar.title")}}
           </h3>
+          
           {{#if this.tagList.length}}
-            {{#each this.tagList as |t|}}
-              <a href="/tags/c/{{this.category.slug}}/{{this.category.id}}/{{t.id}}" class="discourse-tag box">{{t.id}}</a>
-            {{/each}}
+            {{!-- 将标签循环包裹在一个容器内，方便使用 flex/gap 布局 --}}
+            <div class="tags-container">
+              {{#each this.tagList as |t|}}
+                <a href="/tags/c/{{this.category.slug}}/{{this.category.id}}/{{t.id}}" class="discourse-tag box">{{t.id}}</a>
+              {{/each}}
+            </div>
           {{else}}
             <p class="no-tags">{{i18n (themePrefix "tag_sidebar.no_tags")}}</p>
           {{/if}}

@@ -10,6 +10,23 @@ sort_by_popularity:
  default: false
  type: bool
  description: When checked tags are sorted by popularity
+ 
 group_tags_by_tag_group:
   default: false
   client: true
+
+sidebar_position:
+  type: enum
+  default: right
+  client: true
+  description: "设置标签云侧边栏显示在内容的左侧还是右侧。"
+  choices:
+    - left
+    - right
+
+sticky_sidebar:
+  type: bool
+  default: true
+  client: true
+  description: "勾选后，当页面向下滚动时，侧边栏将吸附在屏幕顶部。"
+
