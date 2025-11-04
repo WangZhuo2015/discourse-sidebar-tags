@@ -1,68 +1,72 @@
-.topic-list.with-sidebar {
-  // Don't show the sidebar everywhere...
-  > div {
-    display: none;
-  }
-}
+.tag-sidebar-active {
+  @media screen and (width >= 767px) {
+    // 选择器 #list-area .contents .topic-list 更加稳定
+    #list-area .contents .topic-list {
+      display: grid;
+      grid-column-gap: 2%;
+      align-items: start;
+      grid-template-rows: 50px auto;
+      grid-template-columns: 75% 23%;
 
-@media screen and (width >= 767px) {
-  // ...how the sidebar at 767px
-  #list-area > .contents > .topic-list.with-sidebar {
-    display: grid;
-    grid-column-gap: 2%;
-    align-items: start;
-    grid-template-rows: 50px auto;
-    grid-template-columns: 75% 23%;
+      @media screen and (width <= 900px) {
+        grid-template-columns: 82% 16%;
+      }
+      grid-template-areas:
+        "head sidebar"
+        "body sidebar";
 
-    @media screen and (width <= 900px) {
-      grid-template-columns: 82% 16%;
-    }
-    grid-template-areas:
-      "head sidebar"
-      "body sidebar";
+      // 兼容新旧Discourse版本的话题列表头部
+      thead,
+      .topic-list-header {
+        grid-area: head;
+        display: table;
+        align-self: end;
+        width: 100%;
+      }
 
-    thead {
-      grid-area: head;
-      display: table;
-      align-self: end;
-    }
+      // 兼容新旧Discourse版本的话题列表主体
+      tbody,
+      .topic-list-body {
+        grid-area: body;
+        display: table;
+        width: 100%;
+      }
 
-    > .discourse-sidebar-tags {
-      box-sizing: border-box;
-      overflow: hidden;
-      display: block;
-      margin-top: 15px;
-      grid-area: sidebar;
-      order: 3;
-      padding: 1em;
-      border: 1px solid var(--primary-low);
-      background: var(--primary-very-low);
-      border-radius: 2px;
-
-      a {
-        display: inline-block;
-        white-space: nowrap;
+      // 侧边栏组件自身的样式
+      > .discourse-sidebar-tags {
+        box-sizing: border-box;
         overflow: hidden;
-        text-overflow: ellipsis;
-        margin-bottom: 4px;
+        display: block;
+        margin-top: 15px;
+        grid-area: sidebar;
+        order: 3;
+        padding: 1em;
+        border: 1px solid var(--primary-low);
+        background: var(--primary-very-low);
+        border-radius: 2px;
+
+        a {
+          display: inline-block;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin-bottom: 4px;
+        }
       }
     }
-
-    tbody {
-      grid-area: body;
-      display: table;
-    }
   }
-}
 
-.custom-sidebar {
+  // "有新主题" 提示条的宽度修正
   #list-area .show-more.has-topics .alert {
-    // New topic notification needs to be narrower
     box-sizing: border-box;
     width: 75%;
 
     @media screen and (width <= 900px) {
-      width: 73%;
+      // 修正宽度以匹配 topic-list 的宽度 (82%)
+      width: 82%;
     }
   }
 }
+
+// 移除了旧的 .topic-list.with-sidebar 选择器和相关的 hack 代码，不再需要。
+
